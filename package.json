@@ -1,0 +1,19 @@
+{
+  "name": "chess-game-backend",
+  "version": "1.0.0",
+  "description": "Backend portion of my multi-player chess game",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ProjectsByJackHe/multiplayer-chess-game-backend.git"
+  },
+  "author": "Jack He",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ProjectsByJackHe/multiplayer-chess-game-backend/issues"
+  },
+  "homepage": "https://github.com/ProjectsByJackHe/multiplayer-chess-game-backend#readme"
+}
