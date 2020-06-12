@@ -3,6 +3,9 @@ const http = require('http')
 const socketio = require('socket.io')
 const gameLogic = require('./game-logic')
 const bodyParser = require('body-parser')
+const newGameRoutes = require('./routes/new-game-routes')
+const joinGameRoutes = require('./routes/join-game-routes')
+const HttpError = require('./model/http-error')
 const app = express()
 
 /**
@@ -14,9 +17,8 @@ const app = express()
  * - '/game/:gameid' path should first search for a game instance, then join it. Otherwise, throw 404 error.  
  */
 
-// registering middlewares:
-app.use(bodyParser.json())
 // configuring middlewares:
+app.use(bodyParser.json())
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*') // allow any domain to send requests
     res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization')
@@ -25,20 +27,17 @@ app.use((req, res, next) => {
 })
 
 
-app.use('/', (req, res, next) => {
-    const gameId = req.body.gameid 
-    console.log(gameId)
-    res.json(gameId)
+// registering middlewares:
+app.use('/', newGameRoutes)
+app.use('/game', joinGameRoutes)
+
+
+
+// error handling:
+app.use((req, res, next) => {
+    const error = new HttpError('resource not found on server', 404)
+    throw error
 })
-
-
-app.use('/game/:gameid', (req, res, next) => {
-    const gameIdToJoin = req.params.gameid
-    console.log(gameIdToJoin)
-    res.json(gameIdToJoin)
-})
-
-
 app.use((error, req, res, next) => {
     if (res.headerSent) {
         return next(error)
@@ -46,6 +45,7 @@ app.use((error, req, res, next) => {
     res.status(error.code || 500)
     res.json({message: error.message || "an unknown error occured."})
 })
+
 
 const server = http.createServer(app)
 const io = socketio(server)
