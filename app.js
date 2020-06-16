@@ -3,21 +3,24 @@ const http = require('http')
 const socketio = require('socket.io')
 const gameLogic = require('./game-logic')
 const bodyParser = require('body-parser')
-const newGameRoutes = require('./routes/new-game-routes')
-const joinGameRoutes = require('./routes/join-game-routes')
 const HttpError = require('./model/http-error')
 const app = express()
+const gameRoutes = express.Router();
 
-/**
- * Backend flow:
- * - check to see if the game ID encoded in the URL belongs to a valid game session in progress. 
- * - if yes, join the client to that game. 
- * - else, create a new game instance. 
- * - '/' path should lead to a new game instance. 
- * - '/game/:gameid' path should first search for a game instance, then join it. Otherwise, throw 404 error.  
- */
+// directing user to a valid game session or creating a new game session. 
+gameRoutes.post("/", (req, res, next) => {
+    const gameId = req.body.gameid 
+    const userName = req.body.userName
+    console.log(userName)
+    res.json({gameId})
+});
+gameRoutes.get("/game/:gameid", (req, res, next) => {
+    const gameid = req.params.gameid
+    // console.log(gameid)
+    res.json({gameid})
+});
 
-// configuring middlewares:
+// deal with CORS policy:
 app.use(bodyParser.json())
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*') // allow any domain to send requests
@@ -25,13 +28,7 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE')
     next()
 })
-
-
-// registering middlewares:
-app.use('/', newGameRoutes)
-app.use('/game', joinGameRoutes)
-
-
+app.use('/', gameRoutes)
 
 // error handling:
 app.use((req, res, next) => {
@@ -46,6 +43,15 @@ app.use((error, req, res, next) => {
     res.json({message: error.message || "an unknown error occured."})
 })
 
+/**
+ * Backend flow:
+ * - check to see if the game ID encoded in the URL belongs to a valid game session in progress. 
+ * - if yes, join the client to that game. 
+ * - else, create a new game instance. 
+ * - '/' path should lead to a new game instance. 
+ * - '/game/:gameid' path should first search for a game instance, then join it. Otherwise, throw 404 error.  
+ */
+
 
 const server = http.createServer(app)
 const io = socketio(server)
@@ -55,10 +61,9 @@ const io = socketio(server)
 // join the existing game session. 
 // create a new session.  
 // run when client connects
-io.on('connection', socket => {
-    // listens when client connects
-    console.log('new web socket connection')
-    gameLogic.createGame(io, socket)
+
+io.on('connection', client => {
+    gameLogic.initializeGame(io, client)
 })
 
 // usually here is where we try to connect to our DB.

@@ -1,5 +1,6 @@
 class Game {
-    constructor() {
-        
+    constructor(gameId, userName) {
+        this.gameId = gameId 
+        this.userName = userName
     }
 }

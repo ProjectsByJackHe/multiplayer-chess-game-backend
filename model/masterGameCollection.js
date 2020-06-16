@@ -4,7 +4,9 @@ class MasterGameSession {
         this.numberOfGamesInSession = 0
     }
 
-    addGame(gameId, player) {
-        
+    addGame(game) {
+        this.currentGamesInSession[game.gameId] = game
     }
 }
+
+module.exports = MasterGameSession
