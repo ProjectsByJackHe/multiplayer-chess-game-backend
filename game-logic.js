@@ -10,6 +10,8 @@ var gameSocket
 // gamesInSession stores an array of all active socket connections
 var gamesInSession = []
 
+// users store the users who are calling each other
+const users = {}
 
 const initializeGame = (sio, socket) => {
     /**
@@ -24,11 +26,9 @@ const initializeGame = (sio, socket) => {
     gamesInSession.push(gameSocket)
 
     // Run code when the client disconnects from their socket session. 
-    // !!!
     gameSocket.on("disconnect", onDisconnect)
 
     // Sends new move to the other socket session in the same room. 
-    // !!!
     gameSocket.on("new move", newMove)
 
     // User creates new game room after clicking 'submit' on the frontend
@@ -36,7 +36,36 @@ const initializeGame = (sio, socket) => {
 
     // User joins gameRoom after going to a URL with '/game/:gameId' 
     gameSocket.on("playerJoinGame", playerJoinsGame)
+
+    gameSocket.on('request username', requestUserName)
+
+    gameSocket.on('recieved userName', recievedUserName)
+
+    // register event listeners for video chat app:
+    videoChatBackend()
 }
+
+
+function videoChatBackend() {
+    if (!users[gameSocket.id]) {
+        users[gameSocket.id] = gameSocket.id;
+    }
+    gameSocket.emit("yourID", gameSocket.id);
+
+    io.sockets.emit("allUsers", users);
+
+    gameSocket.on('disconnect', () => {
+        delete users[gameSocket.id];
+    })
+
+    gameSocket.on("callUser", (data) => {
+        io.to(data.userToCall).emit('hey', {signal: data.signalData, from: data.from});
+    })
+
+    gameSocket.on("acceptCall", (data) => {
+        io.to(data.to).emit('callAccepted', data.signal);
+    })
+}   
 
 
 
@@ -57,12 +86,18 @@ function playerJoinsGame(idData) {
         this.emit('status' , "This game session does not exist." );
         return
     }
-    if(room.length < 2) {
+    if (room.length < 2) {
         // attach the socket id to the data object.
         idData.mySocketId = sock.id;
 
         // Join the room
         sock.join(idData.gameId);
+
+        console.log(room.length)
+
+        if (room.length === 2) {
+            io.sockets.in(idData.gameId).emit('start game', idData.userName)
+        }
 
         // Emit an event notifying the clients that the player has joined the room.
         io.sockets.in(idData.gameId).emit('playerJoinedRoom', idData);
@@ -98,6 +133,16 @@ function newMove(move) {
 function onDisconnect() {
     var i = gamesInSession.indexOf(gameSocket);
     gamesInSession.splice(i, 1);
+}
+
+
+function requestUserName(gameId) {
+    io.to(gameId).emit('give userName', this.id);
+}
+
+function recievedUserName(data) {
+    data.socketId = this.id
+    io.to(data.gameId).emit('get Opponent UserName', data);
 }
 
 exports.initializeGame = initializeGame

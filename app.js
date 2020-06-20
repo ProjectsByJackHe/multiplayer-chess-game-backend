@@ -66,5 +66,5 @@ io.on('connection', client => {
     gameLogic.initializeGame(io, client)
 })
 
-// usually here is where we try to connect to our DB.
-server.listen(4000)
+// usually this is where we try to connect to our DB.
+server.listen(8000)
