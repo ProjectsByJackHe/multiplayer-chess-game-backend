@@ -6,12 +6,9 @@
 
 var io
 var gameSocket
-
 // gamesInSession stores an array of all active socket connections
 var gamesInSession = []
 
-// users store the users who are calling each other
-const users = {}
 
 const initializeGame = (sio, socket) => {
     /**
@@ -47,17 +44,7 @@ const initializeGame = (sio, socket) => {
 
 
 function videoChatBackend() {
-    if (!users[gameSocket.id]) {
-        users[gameSocket.id] = gameSocket.id;
-    }
-    gameSocket.emit("yourID", gameSocket.id);
-
-    io.sockets.emit("allUsers", users);
-
-    gameSocket.on('disconnect', () => {
-        delete users[gameSocket.id];
-    })
-
+    // main function listeners
     gameSocket.on("callUser", (data) => {
         io.to(data.userToCall).emit('hey', {signal: data.signalData, from: data.from});
     })

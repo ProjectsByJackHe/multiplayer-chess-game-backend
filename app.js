@@ -2,46 +2,7 @@ const express = require('express')
 const http = require('http')
 const socketio = require('socket.io')
 const gameLogic = require('./game-logic')
-const bodyParser = require('body-parser')
-const HttpError = require('./model/http-error')
 const app = express()
-const gameRoutes = express.Router();
-
-// directing user to a valid game session or creating a new game session. 
-gameRoutes.post("/", (req, res, next) => {
-    const gameId = req.body.gameid 
-    const userName = req.body.userName
-    console.log(userName)
-    res.json({gameId})
-});
-gameRoutes.get("/game/:gameid", (req, res, next) => {
-    const gameid = req.params.gameid
-    // console.log(gameid)
-    res.json({gameid})
-});
-
-// deal with CORS policy:
-app.use(bodyParser.json())
-app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*') // allow any domain to send requests
-    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization')
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE')
-    next()
-})
-app.use('/', gameRoutes)
-
-// error handling:
-app.use((req, res, next) => {
-    const error = new HttpError('resource not found on server', 404)
-    throw error
-})
-app.use((error, req, res, next) => {
-    if (res.headerSent) {
-        return next(error)
-    }
-    res.status(error.code || 500)
-    res.json({message: error.message || "an unknown error occured."})
-})
 
 /**
  * Backend flow:
