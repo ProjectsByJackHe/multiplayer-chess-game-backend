@@ -28,4 +28,4 @@ io.on('connection', client => {
 })
 
 // usually this is where we try to connect to our DB.
-server.listen(8000)
+server.listen(process.env.PORT || 8000)
